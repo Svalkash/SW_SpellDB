@@ -1,4 +1,5 @@
 // globals
+var csvSeparator = ';'; //symbol to separate stuff in CSV with spells
 var spellData; // spell data array
 var filteredTier; // filtered tier... ID?
 var sortedCol; // sort by this column
@@ -62,7 +63,7 @@ function loadFileString(filename) {
 function transformToArray(str) {
     let ret = str.split('\r\n');
     for (let i = 0; i < ret.length; ++i) {
-        ret[i] = ret[i].split(',');
+        ret[i] = ret[i].split(csvSeparator);
         for (let j = 0; j < ret[i].length; ++j)
             ret[i][j] = ret[i][j].trim(); // failsafe from spaces
     }
