@@ -1,7 +1,7 @@
-spellData = transformToArray(loadFileString("spells.csv"));
+spellData = transformToArrayOld(loadFileString("spells.csv"));
 filteredTier = '';
 //initial table
-drawTable(spellData);
+drawTableOld(spellData);
 //adding filters
 let sel = document.getElementById("tier-select");
 let opt = document.createElement('option');
@@ -18,10 +18,10 @@ opt.text = "dick";
 opt.disabled = true;
 sel.appendChild(opt);
 // adding events for the filter
-sel.onchange = () => { filterData(sel.value); };
+sel.onchange = () => { filterDataOld(sel.value); };
 
 //adding test sort button
 let but = document.createElement('button');
 but.textContent = 'text';
-but.onclick = () => { sortData(1); }
+but.onclick = () => { sortDataOld(0); }
 document.body.appendChild(but);
