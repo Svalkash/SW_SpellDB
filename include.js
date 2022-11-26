@@ -7,10 +7,16 @@ const SPECIAL_WORDS = ['special', 'специальное', 'особая'];
 //===================================================
 // 'types'
 const TIERS = {
-    'новичок': 1,
-    'закаленный': 2,
-    'ветеран': 3
+    'Новичок': 1,
+    'Закаленный': 2,
+    'Ветеран': 3
 };
+
+// purely beautification
+function firstCapital(str) {
+    return str[0].toUpperCase() + str.slice(1).toLowerCase();
+}
+
 function tierValid(tier) {
     return tierToNum(tier) !== null; // strict to avoid 0
 }
@@ -55,7 +61,7 @@ Matches:
 
 function distUnique(distStr) {
     return SPECIAL_WORDS.indexOf(distStr) != -1
-        || distStr.match('шаблон') !== null
+        || toString(distStr).match('шаблон') !== null
         || distStr == 'касание'
         || distStr == 'на себя'
         || distStr == 'поле зрения';
@@ -78,9 +84,9 @@ function distStrToObj(distStr) {
         || matchRes[5] && matchRes[2]) // a/b/c and stat, illegal currently
         return null;
     else return {
-        stat: match[2] === undefined ? null : match[2],
-        val: match[4] === undefined ? 1 : match[4],
-        unit: match[6] === undefined ? null : match[6]
+        stat: matchRes[2] === undefined ? null : matchRes[2],
+        val: matchRes[4] === undefined ? 1 : matchRes[4],
+        unit: matchRes[6] === undefined ? null : matchRes[6]
     }
 }
 
@@ -92,19 +98,19 @@ function distStrValid(distStr) {
 function distObjToNum(distObj) {
     // uniques
     if (SPECIAL_WORDS.indexOf(distObj.val) != -1) return -2000000;
-    if (distObj.val.match('шаблон') !== null) return 0.1;
+    if (toString(distObj.val).match('шаблон') !== null) return 0.1;
     if (distObj.val == 'касание') return 0;
     if (distObj.val == 'на себя') return -0.1;
     if (distObj.val == 'поле зрения') return 1000000;
     // normals
     let multiValRE = new RegExp('([0-9]+)(/[0-9]+)+'); // for filtering 12/14/17
-    let multiValMatch = distObj.val.match(multiValRE);
-    let minVal = multiValRE === null ? distObj.val : multiValMatch[1]; // '12' or value
+    let multiValMatch = toString(distObj.val).match(multiValRE);
+    let minVal = multiValMatch === null ? distObj.val : multiValMatch[1]; // '12' or value
     let unitCoef = distObj.unit == 'см' ? 0.01
-        : distObj.unit == 'км' ? 1.0
+        : distObj.unit == 'м' ? 1.0
             : distObj.unit == 'км' ? 1000.0
                 : 1.5; // клетка = 1.5м
-    let preStat = distObj.val * unitCoef; // without the stat
+    let preStat = minVal * unitCoef; // without the stat
     if (distObj.stat === null) return preStat; // no stat, no problem
     else if (stats.hasOwnProperty(distObj.stat)) return stats[distObj.stat]/2 * preStat;
     else return -1000000 + preStat; // at the bottom, but still somehow sorted
@@ -114,12 +120,14 @@ function distObjToNum(distObj) {
 function distObjToVal(distObj) {
     if (distUnique(distObj.val))
         return distObj.val;
-    if (distObj.stat !== null && stats.hasOwnProperty(distObj.stat))
-        return distObjToNum(distObj); // stat -> calculate
-    let retVal = '';
-    if (distObj.stat != null) retVal += distObj.stat;
-    if (distObj.stat != null && distObj.val != null) retVal += ' * ';
-    if (distObj.val != null) retVal += distObj.val;
+        let retVal = '';
+    if (distObj.stat !== null && stats.hasOwnProperty(distObj.stat) && !isNaN(distObj.val)) {
+        retVal += (stats[distObj.stat] / 2 * distObj.val);
+    } else {
+        if (distObj.stat != null) retVal += distObj.stat;
+        if (distObj.stat != null && distObj.val != null && distObj.val != 1) retVal += ' * ';
+        if (distObj.val != null && distObj.val != 1) retVal += distObj.val;
+    }
     if (distObj.unit != null) retVal += ' ' + distObj.unit;
     return retVal;
 }
@@ -147,9 +155,9 @@ function durStrToObj(durStr) {
     if (matchRes === null)
         return null;
     else return {
-        val: match[1],
-        unit: match[2] === undefined ? null : match[2],
-        prolong: match[3] === undefined ? null : match[3]
+        val: matchRes[1],
+        unit: matchRes[2] === undefined ? null : matchRes[2],
+        prolong: matchRes[3] === undefined ? null : matchRes[3]
     }
 }
 
@@ -188,8 +196,8 @@ function durObjToVal(durObj) {
 var spellData; // spell data array
 var filteredTier; // filtered tier... ID?
 var sortedCol; // sort by this column
-var sortedAsc; // boolean
-const colNames = ['Tier', 'Name', 'PP', 'Distance', 'Duration']; //column names
+var sortedAsc = true; // boolean
+const colNames = ['Уровень', 'Имя', 'Пункты силы', 'Дистанция', 'Длительность']; //column names
 const colProps = ['tier', 'name', 'pp', 'dist', 'dur']; //names for addressing
 var stats = {}; // entered stats
 
@@ -222,7 +230,7 @@ function parseStringSpells(str) {
     for (let i = 0; i < spellStringArray.length; ++i) {
         let spellParts = spellStringArray[i].split(csvSeparator);
         let spellObj = {
-            tier: spellParts[0].trim().toLowerCase(),
+            tier: firstCapital(spellParts[0].trim()),
             name: spellParts[1].trim(),
             pp: spellParts[2].trim().toLowerCase(),
             dist: distStrToObj(spellParts[3]),
@@ -231,8 +239,8 @@ function parseStringSpells(str) {
             desc: ''
         };
         for (let j = 6; j < spellParts.length; ++j)
-            spellObj.desc += spellParts[j].trim() += '\r\n'; // paragraphs
-        spellObj.desc.slice(0, -2); // trim last \r\n
+            spellObj.desc += spellParts[j].trim() + '\r\n'; // paragraphs
+        spellObj.desc = spellObj.desc.slice(0, -2); // trim last \r\n
         // validate
         if (!spellValid(spellObj)) {
             alert("Spell loading error!");
@@ -250,10 +258,17 @@ function addCellToRow(row, innerHTML, onclick = null) {
         cell.onclick = onclick;
 }
 
-function addSortButton(row, col) {
+function addSortButtonOld(row, col) {
     let but = document.createElement('button');
     but.textContent = sortedCol == col ? (sortedAsc ? '↓' : '↑') : '⇅';
     but.onclick = () => { sortDataOld(col); }
+    row.cells[row.cells.length - 1].appendChild(but);
+}
+
+function addSortButton(row, col) {
+    let but = document.createElement('button');
+    but.textContent = sortedCol == col ? (sortedAsc ? '↑' : '↓') : '⇅';
+    but.onclick = () => { sortData(col); }
     row.cells[row.cells.length - 1].appendChild(but);
 }
 
@@ -270,7 +285,7 @@ function drawTableOld() {
     let row = thead.insertRow();
     for (let i = 0; i < colNames.length; ++i) {
         addCellToRow(row, colNames[i] + '&nbsp');
-        addSortButton(row, i);
+        addSortButtonOld(row, i);
     }
     // adding contents
     for (let spellArr of spellData) {
@@ -340,11 +355,12 @@ function smarterCompare(a, b, reverse) {
 }
 
 function sortData(colNum) {
-    sortedDesc = sortedCol != colNum || !sortedDesc;
+    let toNumFunction = [tierToNum, (x) => x, ppToNum, distObjToNum, durObjToNum][colNum];
+    sortedAsc = sortedCol != colNum || !sortedAsc;
     sortedCol = colNum; // for descendant
     let propName = colProps[colNum];
     spellData.sort((row1, row2) => {
-        return smarterCompare(row1[propName], row2[propName], sortedDesc);
+        return smarterCompare(toNumFunction(row1[propName]), toNumFunction(row2[propName]), !sortedAsc);
     });
     drawTable();
 }
