@@ -371,6 +371,22 @@ function filterDataOld(tier) {
 }
 
 function filterData(tier) {
+    console.log(tier);
     filteredTier = tier;
     drawTable();
+}
+
+function addSelectOption(elem, optVal, optText = null) {
+    let opt = document.createElement('option');
+    opt.value = optVal;
+    opt.text = optText === null ? optVal : optText;
+    elem.appendChild(opt);
+}
+
+function prepareTierSelect() {
+    let sel = document.getElementById("tier-select");
+    addSelectOption(sel, "", "---");
+    for (let tier in TIERS)
+        addSelectOption(sel, TIERS[tier], tier);
+    sel.onchange = () => { filterData(sel.value); };
 }
