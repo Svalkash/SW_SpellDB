@@ -242,10 +242,21 @@ function parseStringSpells(str) {
             spellObj.desc += spellParts[j].trim() + '\r\n'; // paragraphs
         spellObj.desc = spellObj.desc.slice(0, -2); // trim last \r\n
         // validate
+        let isValid = true;
         if (!spellValid(spellObj)) {
             alert("Spell loading error!");
             console.log("Spell loading error:", spellParts, spellObj);
-        } else retArray.push(spellObj);
+            isValid = false;
+        } else {
+            for (let dupSpell of retArray)
+                if (spellObj.name == dupSpell.name) {
+                    alert("Duplicate spell name!");
+                    console.log("Duplicate spell name:", dupSpell, spellObj);
+                    isValid = false;
+                    break;
+                }
+        }
+        if (isValid) retArray.push(spellObj);
     }
     return retArray;
 }
@@ -256,6 +267,7 @@ function addCellToRow(row, innerHTML, onclick = null) {
     cell.classList.add('tabclass');
     if (onclick != null)
         cell.onclick = onclick;
+    return cell;
 }
 
 function addSortButtonOld(row, col) {
@@ -316,7 +328,7 @@ function drawTable() {
     for (let spellObj of spellData) {
         if (filteredTier == '' || tierToNum(spellObj.tier) == filteredTier) {
             row = tb.insertRow();
-            addCellToRow(row, spellObj.tier);
+            addCellToRow(row, spellObj.tier).href;
             addCellToRow(row, spellObj.name);
             addCellToRow(row, spellObj.pp);
             addCellToRow(row, distObjToVal(spellObj.dist));
