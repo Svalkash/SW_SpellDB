@@ -117,11 +117,12 @@ function distObjToNum(distObj) {
 }
 
 // displayed value. With stat if possible.
-function distObjToVal(distObj) {
+// calcStat - set to false to prevent stat usage
+function distObjToVal(distObj, calcStat = true) {
     if (distUnique(distObj.val))
         return distObj.val;
         let retVal = '';
-    if (distObj.stat !== null && stats.hasOwnProperty(distObj.stat) && !isNaN(distObj.val)) {
+    if (distObj.stat !== null && stats.hasOwnProperty(distObj.stat) && !isNaN(distObj.val) && calcStat) {
         retVal += (stats[distObj.stat] / 2 * distObj.val);
     } else {
         if (distObj.stat != null) retVal += distObj.stat;
@@ -188,4 +189,3 @@ function durObjToVal(durObj) {
     if (durObj.prolong != null) retVal += ' ' + durObj.prolong;
     return retVal;
 }
-

@@ -45,11 +45,10 @@ function parseStringSpells(str) {
             dist: distStrToObj(spellParts[3]),
             dur: durStrToObj(spellParts[4]),
             trap: spellParts[5].trim(),
-            desc: ''
+            desc: []
         };
         for (let j = 6; j < spellParts.length; ++j)
-            spellObj.desc += spellParts[j].trim() + '\r\n'; // paragraphs
-        spellObj.desc = spellObj.desc.slice(0, -2); // trim last \r\n
+            spellObj.desc.push(spellParts[j].trim()); // paragraphs
         // validate
         let isValid = true;
         if (!spellValid(spellObj)) {
@@ -70,12 +69,12 @@ function parseStringSpells(str) {
     return retArray;
 }
 
-function addCellToRow(row, innerHTML, onclick = null) {
+function addCellToRow(row, contents) {
     let cell = row.insertCell();
-    cell.innerHTML = innerHTML;
+    if (typeof (contents) == 'string')
+        cell.innerHTML = contents;
+    else cell.appendChild(contents);
     cell.classList.add('tabclass');
-    if (onclick != null)
-        cell.onclick = onclick;
     return cell;
 }
 
@@ -123,7 +122,9 @@ function drawTable() {
     // console.log(spellData);
     // console.log(filteredTier);
     let tab = document.getElementById("spelltab");
+    let list = document.getElementById("spelllist");
     tab.innerHTML = "";
+    list.innerHTML = "";
     tab.classList.add('tabclass');
     // adding headers
     let thead = tab.createTHead();
@@ -136,12 +137,48 @@ function drawTable() {
     // adding contents
     for (let spellObj of spellData) {
         if (filteredTier == '' || tierToNum(spellObj.tier) == filteredTier) {
+            let spellID_tab = 'spell_' + spellObj.name + '_row';
+            let spellID_list = 'spell_' + spellObj.name + '_desc';
+            // add to the table
             row = tb.insertRow();
-            addCellToRow(row, spellObj.tier).href;
-            addCellToRow(row, spellObj.name);
+            row.id = spellID_tab;
+            addCellToRow(row, spellObj.tier);
+            let hr = document.createElement('a');
+            hr.href = '#' + spellID_list;
+            hr.innerHTML = spellObj.name;
+            addCellToRow(row, hr);
             addCellToRow(row, spellObj.pp);
             addCellToRow(row, distObjToVal(spellObj.dist));
             addCellToRow(row, durObjToVal(spellObj.dur));
+            // add to the list
+            let desc = document.createElement('div');
+            desc.id = spellID_list;
+            // name-header
+            let h = document.createElement('h3');
+            h.innerHTML = spellObj.name;
+            desc.appendChild(h);
+            // info list
+            let p = document.createElement('p');
+            p.append(colNames[0] + ': ' + spellObj.tier);
+            p.appendChild(document.createElement('br'));
+            p.append(colNames[2] + ': ' + spellObj.pp);
+            p.appendChild(document.createElement('br'));
+            p.append(colNames[3] + ': ' + distObjToVal(spellObj.dist));
+            p.appendChild(document.createElement('br'));
+            p.append('Проявления: ' + spellObj.trap);
+            desc.appendChild(p);
+            // desc
+            for (let dp of spellObj.desc) {
+                p = document.createElement('p');
+                p.innerHTML = dp;
+                desc.appendChild(p);
+            }
+            list.appendChild(desc);
+            // back-anchor
+            hr = document.createElement('a');
+            hr.href = '#' + spellID_tab;
+            hr.innerHTML = 'К таблице';
+            desc.appendChild(hr);
         }
     }
 }
