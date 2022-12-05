@@ -78,43 +78,11 @@ function addCellToRow(row, contents) {
     return cell;
 }
 
-function addSortButtonOld(row, col) {
-    let but = document.createElement('button');
-    but.textContent = sortedCol == col ? (sortedAsc ? '↓' : '↑') : '⇅';
-    but.onclick = () => { sortDataOld(col); }
-    row.cells[row.cells.length - 1].appendChild(but);
-}
-
 function addSortButton(row, col) {
     let but = document.createElement('button');
     but.textContent = sortedCol == col ? (sortedAsc ? '↑' : '↓') : '⇅';
     but.onclick = () => { sortData(col); }
     row.cells[row.cells.length - 1].appendChild(but);
-}
-
-function drawTableOld() {
-    console.log('redrawing...');
-    // console.log(spellData);
-    // console.log(filteredTier);
-    let tab = document.getElementById("spelltab");
-    tab.innerHTML = "";
-    tab.classList.add('tabclass');
-    // adding headers
-    let thead = tab.createTHead();
-    let tb = tab.createTBody();
-    let row = thead.insertRow();
-    for (let i = 0; i < colNames.length; ++i) {
-        addCellToRow(row, colNames[i] + '&nbsp');
-        addSortButtonOld(row, i);
-    }
-    // adding contents
-    for (let spellArr of spellData) {
-        if (filteredTier == '' || spellArr[1] == filteredTier) {
-            row = tb.insertRow();
-            for (let elem of spellArr)
-                addCellToRow(row, elem);
-        }
-    }
 }
 
 function drawTable() {
@@ -183,28 +151,8 @@ function drawTable() {
     }
 }
 
-function transformToArrayOld(str) {
-    let ret = str.split('\r\n');
-    for (let i = 0; i < ret.length; ++i) {
-        ret[i] = ret[i].split(csvSeparator);
-        for (let j = 0; j < ret[i].length; ++j)
-            ret[i][j] = ret[i][j].trim(); // failsafe from spaces
-    }
-    return ret;
-}
-
 function defaultCompare(a, b) {
     return a > b ? 1 : a < b ? -1 : 0;
-}
-
-function sortDataOld(colNum) {
-    sortedAsc = sortedCol != colNum || !sortedAsc;
-    sortedCol = colNum; // for descendant
-    spellData.sort((row1, row2) => {
-        if (sortedAsc) return defaultCompare(row1[sortedCol], row2[sortedCol]);
-        else return defaultCompare(row2[sortedCol], row1[sortedCol]); //kinda reverse
-    });
-    drawTableOld();
 }
 
 function smarterCompare(a, b, reverse) {
@@ -221,11 +169,6 @@ function sortData(colNum) {
         return smarterCompare(toNumFunction(row1[propName]), toNumFunction(row2[propName]), !sortedAsc);
     });
     drawTable();
-}
-
-function filterDataOld(tier) {
-    filteredTier = tier;
-    drawTableOld();
 }
 
 function filterData(tier) {
