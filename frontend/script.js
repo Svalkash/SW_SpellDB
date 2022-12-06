@@ -13,6 +13,26 @@ var stats = {}; // entered stats
 //===================================================
 // functions
 
+function loadServerData() {
+    let request = new XMLHttpRequest();
+    request.onreadystatechange = () => {
+        try {
+            if (request.readyState === XMLHttpRequest.DONE) {
+                if (request.status === 200) {
+                    respArr = JSON.parse(request.responseText);
+                    spellData = respArr.map(spellObjFromResponse);
+                    drawTable(spellData);
+                }
+                else alert("Request error: " + request.status);
+            }
+        } catch (e) {
+            alert(`Caught Exception: ${e.description}`);
+        }
+    }
+    request.open("GET", "http://localhost:5000/api/spelldb");
+    request.send();
+}
+
 function loadFileString(filename) {
     let xhReq = new XMLHttpRequest();
     xhReq.open("GET", filename, false);
@@ -195,10 +215,29 @@ function prepareTierSelect() {
 //======================================================================================================
 //======================================================================================================
 //======================================================================================================
-
-spellData = parseStringSpells(loadFileString("spells_part.csv"));
-filteredTier = '';
-//initial table
-drawTable(spellData);
+// old method
+// spellData = parseStringSpells(loadFileString("spells_part.csv"));
 //adding filters
+filteredTier = '';
 prepareTierSelect();
+
+loadServerData();
+
+// document.getElementById("send3").onclick = () => {
+//     for (let spell of spellData) {
+//         let fd = spellObjToFormData(spell)
+//         let request = new XMLHttpRequest();
+//         request.onreadystatechange = () => {
+//             try {
+//                 if (request.readyState === XMLHttpRequest.DONE) {
+//                     if (request.status === 200) console.log("Success!")
+//                     else console.log("Request error: " + request.status);
+//                 }
+//             } catch (e) {
+//                 alert(`Caught Exception: ${e.description}`);
+//             }
+//         }
+//         request.open("POST", "http://localhost:5000/api/spelldb");
+//         request.send(fd);
+//     }
+// }

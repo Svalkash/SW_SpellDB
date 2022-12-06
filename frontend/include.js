@@ -74,7 +74,7 @@ function distStrToObj(distStr) {
         stat: null,
         val: distStr,
         unit: null
-    }    
+    }
     // others
     let matchRes = distStr.match(buildDistRegex());
     if (matchRes === null)
@@ -112,7 +112,7 @@ function distObjToNum(distObj) {
                 : 1.5; // клетка = 1.5м
     let preStat = minVal * unitCoef; // without the stat
     if (distObj.stat === null) return preStat; // no stat, no problem
-    else if (stats.hasOwnProperty(distObj.stat)) return stats[distObj.stat]/2 * preStat;
+    else if (stats.hasOwnProperty(distObj.stat)) return stats[distObj.stat] / 2 * preStat;
     else return -1000000 + preStat; // at the bottom, but still somehow sorted
 }
 
@@ -121,7 +121,7 @@ function distObjToNum(distObj) {
 function distObjToVal(distObj, calcStat = true) {
     if (distUnique(distObj.val))
         return distObj.val;
-        let retVal = '';
+    let retVal = '';
     if (distObj.stat !== null && stats.hasOwnProperty(distObj.stat) && !isNaN(distObj.val) && calcStat) {
         retVal += (stats[distObj.stat] / 2 * distObj.val);
     } else {
@@ -149,7 +149,7 @@ function durStrToObj(durStr) {
         val: durStr,
         unit: null,
         prolong: null
-    }    
+    }
     // others
     let durRegex = new RegExp('^([0-9]+) *(|мин|час)\\.? *(\\([^)]*\\))?');
     let matchRes = durStr.match(durRegex);
@@ -188,4 +188,47 @@ function durObjToVal(durObj) {
     if (durObj.unit != null) retVal += ' ' + durObj.unit;
     if (durObj.prolong != null) retVal += ' ' + durObj.prolong;
     return retVal;
+}
+
+function spellObjToFormData(spellObj) {
+    let fd = new FormData();
+    fd.append('tier', spellObj.tier);
+    fd.append('name', spellObj.name);
+    fd.append('pp', spellObj.pp);
+    fd.append('dist_stat', spellObj.dist.stat);
+    fd.append('dist_val', spellObj.dist.val);
+    fd.append('dist_unit', spellObj.dist.unit);
+    fd.append('dur_val', spellObj.dur.val);
+    fd.append('dur_unit', spellObj.dur.unit);
+    fd.append('dur_prolong', spellObj.dur.prolong);
+    fd.append('trap', spellObj.trap);
+    for (let i = 0; i < spellObj.desc.length; ++i)
+        fd.append('desc_' + i, spellObj.desc[i]);
+    return fd;
+}
+
+function spellObjFromResponse(respObj) {
+    let spellObj = {
+        tier: respObj.tier,
+        name: respObj.name,
+        pp: respObj.pp,
+        dist: {
+            stat: respObj.dist_stat,
+            val: respObj.dist_val,
+            unit: respObj.dist_unit
+        },
+        dur: {
+            val: respObj.dur_val,
+            unit: respObj.dur_unit,
+            prolong: respObj.dur_prolong
+        },
+        trap: respObj.trap,
+        desc: []
+    };
+    let i = 0;
+    while (respObj.hasOwnProperty('desc_' + i)) {
+        spellObj.desc.push(respObj['desc_' + i]);
+        ++i;
+    }
+    return spellObj;
 }
