@@ -10,8 +10,6 @@ spells = []
 # tf.close()
 with open('save.json', 'r') as f_init:
     spells = json.load(f_init)
-print(spells)
-
 
 @app.route("/api/spelldb", methods=['POST', 'GET'])
 def spelldb():

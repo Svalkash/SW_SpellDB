@@ -8,6 +8,8 @@ var sortedCol; // sort by this column
 var sortedAsc = true; // boolean
 const colNames = ['Уровень', 'Имя', 'Пункты силы', 'Дистанция', 'Длительность']; //column names
 const colProps = ['tier', 'name', 'pp', 'dist', 'dur']; //names for addressing
+
+// forms
 var stats = {}; // entered stats
 
 //===================================================
@@ -109,8 +111,8 @@ function drawTable() {
     console.log('redrawing...');
     // console.log(spellData);
     // console.log(filteredTier);
-    let tab = document.getElementById("spelltab");
-    let list = document.getElementById("spelllist");
+    let tab = document.getElementById("spell-tab");
+    let list = document.getElementById("spell-list");
     tab.innerHTML = "";
     list.innerHTML = "";
     tab.classList.add('tabclass');
@@ -197,6 +199,9 @@ function filterData(tier) {
     drawTable();
 }
 
+//======================================================================================================
+// stuff for loading
+
 function addSelectOption(elem, optVal, optText = null) {
     let opt = document.createElement('option');
     opt.value = optVal;
@@ -204,12 +209,99 @@ function addSelectOption(elem, optVal, optText = null) {
     elem.appendChild(opt);
 }
 
-function prepareTierSelect() {
-    let sel = document.getElementById("tier-select");
+function prepareTierFilter() {
+    let sel = document.getElementById("tier-filter");
     addSelectOption(sel, "", "---");
     for (let tier in TIERS)
         addSelectOption(sel, TIERS[tier], tier);
     sel.onchange = () => { filterData(sel.value); };
+}
+
+function prepareDialogForm() {
+    // prepare tier options
+    let tierSel = document.getElementById("new-tier");
+    for (let tier in TIERS)
+        addSelectOption(tierSel, TIERS[tier], tier);
+    // prepare checkers
+    document.getElementById("new-name").oninput = () => {
+        if (nameValid(document.getElementById("new-name").value, spellData))
+            document.getElementById("new-name-mark").innerHTML = "OKAY";
+        else
+            document.getElementById("new-name-mark").innerHTML = "ERROR";
+    }
+    document.getElementById("new-pp").oninput = () => {
+        if (ppValid(document.getElementById("new-pp").value))
+            document.getElementById("new-pp-mark").innerHTML = "OKAY";
+        else
+            document.getElementById("new-pp-mark").innerHTML = "ERROR";
+    }
+    document.getElementById("new-dist").oninput = () => {
+        if (distStrValid(document.getElementById("new-dist").value))
+            document.getElementById("new-dist-mark").innerHTML = "OKAY";
+        else
+            document.getElementById("new-dist-mark").innerHTML = "ERROR";
+    }
+    document.getElementById("new-dur").oninput = () => {
+        if (durStrValid(document.getElementById("new-dur").value))
+            document.getElementById("new-dur-mark").innerHTML = "OKAY";
+        else
+            document.getElementById("new-dur-mark").innerHTML = "ERROR";
+    }
+    document.getElementById("new-spell-form").oninput = () => {
+        if (nameValid(document.getElementById("new-name").value, spellData)
+            && ppValid(document.getElementById("new-pp").value)
+            && distStrValid(document.getElementById("new-dist").value)
+            && durStrValid(document.getElementById("new-dur").value))
+            document.getElementById("new-send").disabled = false;
+        else
+            document.getElementById("new-send").disabled = true;
+    };
+    // prepare form actions
+    document.getElementById("new-spell-form").onsubmit = () => {
+        // first, add the spell to the table
+        let spellObj = {
+            tier: tierFromNum(document.getElementById("new-tier").value),
+            name: document.getElementById("new-name").value.trim(),
+            pp: document.getElementById("new-pp").value.trim().toLowerCase(),
+            dist: distStrToObj(document.getElementById("new-dist").value),
+            dur: durStrToObj(document.getElementById("new-dur").value),
+            trap: document.getElementById("new-trap").value.trim(),
+            desc: document.getElementById("new-desc").value
+                .split('\n')
+                .filter(x => Boolean(x.trim()))
+                .map(x => x.trim())
+        };
+        if (!spellValid(spellObj)) {
+            alert("Spell invalid!");
+            return;
+        }
+        spellData.push(spellObj);
+        // update the table
+        drawTable();
+        // then, make a formdata and send it
+        let request = new XMLHttpRequest();
+        request.onreadystatechange = () => {
+            try {
+                if (request.readyState === XMLHttpRequest.DONE) {
+                    if (request.status === 200) console.log("Spell sent successfully!");
+                    else alert("Request error: " + request.status);
+                }
+            } catch (e) {
+                alert(`Caught Exception: ${e.description}`);
+            }
+        }
+        request.open("POST", "http://localhost:5000/api/spelldb");
+        request.send(spellObjToFormData(spellObj));
+        // reset the form
+        document.getElementById("new-spell-form").reset();
+    }
+    document.getElementById("new-cancel").onclick = () => {
+        document.getElementById("new-spell-dialog").close();
+    }
+    // prepare dialog opener
+    document.getElementById("open-dialog").onclick = () => {
+        document.getElementById("new-spell-dialog").showModal();
+    }
 }
 
 //======================================================================================================
@@ -217,27 +309,9 @@ function prepareTierSelect() {
 //======================================================================================================
 // old method
 // spellData = parseStringSpells(loadFileString("spells_part.csv"));
-//adding filters
+// prepare content
 filteredTier = '';
-prepareTierSelect();
-
+prepareTierFilter();
+prepareDialogForm();
+// load data
 loadServerData();
-
-// document.getElementById("send3").onclick = () => {
-//     for (let spell of spellData) {
-//         let fd = spellObjToFormData(spell)
-//         let request = new XMLHttpRequest();
-//         request.onreadystatechange = () => {
-//             try {
-//                 if (request.readyState === XMLHttpRequest.DONE) {
-//                     if (request.status === 200) console.log("Success!")
-//                     else console.log("Request error: " + request.status);
-//                 }
-//             } catch (e) {
-//                 alert(`Caught Exception: ${e.description}`);
-//             }
-//         }
-//         request.open("POST", "http://localhost:5000/api/spelldb");
-//         request.send(fd);
-//     }
-// }

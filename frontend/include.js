@@ -2,7 +2,7 @@
 const csvSeparator = ';'; //symbol to separate stuff in CSV with spells
 const STAT_NAMES = ['сила', 'ловкость', 'смекалка', 'характер'];
 const STAT_NAMES_SHORT = ['сил', 'лов', 'сме', 'хар'];
-const SPECIAL_WORDS = ['special', 'специальное', 'особая'];
+const SPECIAL_WORDS = ['special', 'специальное', 'особое', 'особая'];
 
 //===================================================
 // 'types'
@@ -29,6 +29,17 @@ function tierFromNum(tierNum) {
         if (tierNum == TIERS[tier])
             return tier;
     return null;
+}
+// checks for empty values and for duplicates
+function nameValid(name, spellArray = null) {
+    let fixedName = name.trim().toLowerCase();
+    if (fixedName == "") return false;
+    if (spellArray != null) {
+        for (let spell of spellArray)
+            if (fixedName == spell.name.toLowerCase())
+                return false;
+    }
+    return true;
 }
 //===================================================
 function ppToNum(pp) {
@@ -71,9 +82,9 @@ function distStrToObj(distStr) {
     distStr = distStr.trim().toLowerCase();
     // unique cases
     if (distUnique(distStr)) return {
-        stat: null,
+        stat: '',
         val: distStr,
-        unit: null
+        unit: ''
     }
     // others
     let matchRes = distStr.match(buildDistRegex());
@@ -84,9 +95,9 @@ function distStrToObj(distStr) {
         || matchRes[5] && matchRes[2]) // a/b/c and stat, illegal currently
         return null;
     else return {
-        stat: matchRes[2] === undefined ? null : matchRes[2],
+        stat: matchRes[2] === undefined ? '' : matchRes[2],
         val: matchRes[4] === undefined ? 1 : matchRes[4],
-        unit: matchRes[6] === undefined ? null : matchRes[6]
+        unit: matchRes[6] === undefined ? '' : matchRes[6]
     }
 }
 
@@ -111,7 +122,7 @@ function distObjToNum(distObj) {
             : distObj.unit == 'км' ? 1000.0
                 : 1.5; // клетка = 1.5м
     let preStat = minVal * unitCoef; // without the stat
-    if (distObj.stat === null) return preStat; // no stat, no problem
+    if (distObj.stat === '') return preStat; // no stat, no problem
     else if (stats.hasOwnProperty(distObj.stat)) return stats[distObj.stat] / 2 * preStat;
     else return -1000000 + preStat; // at the bottom, but still somehow sorted
 }
@@ -122,14 +133,14 @@ function distObjToVal(distObj, calcStat = true) {
     if (distUnique(distObj.val))
         return distObj.val;
     let retVal = '';
-    if (distObj.stat !== null && stats.hasOwnProperty(distObj.stat) && !isNaN(distObj.val) && calcStat) {
+    if (distObj.stat != '' && stats.hasOwnProperty(distObj.stat) && !isNaN(distObj.val) && calcStat) {
         retVal += (stats[distObj.stat] / 2 * distObj.val);
     } else {
-        if (distObj.stat != null) retVal += distObj.stat;
-        if (distObj.stat != null && distObj.val != null && distObj.val != 1) retVal += ' * ';
-        if (distObj.val != null && distObj.val != 1) retVal += distObj.val;
+        if (distObj.stat != '') retVal += distObj.stat;
+        if (distObj.stat != '' && distObj.val != '' && distObj.val != 1) retVal += ' * ';
+        if (distObj.val != '' && distObj.val != 1) retVal += distObj.val;
     }
-    if (distObj.unit != null) retVal += ' ' + distObj.unit;
+    if (distObj.unit != '') retVal += ' ' + distObj.unit;
     return retVal;
 }
 //===================================================
@@ -147,8 +158,8 @@ function durStrToObj(durStr) {
     // unique cases
     if (durUnique(durStr)) return {
         val: durStr,
-        unit: null,
-        prolong: null
+        unit: '',
+        prolong: ''
     }
     // others
     let durRegex = new RegExp('^([0-9]+) *(|мин|час)\\.? *(\\([^)]*\\))?');
@@ -157,8 +168,8 @@ function durStrToObj(durStr) {
         return null;
     else return {
         val: matchRes[1],
-        unit: matchRes[2] === undefined ? null : matchRes[2],
-        prolong: matchRes[3] === undefined ? null : matchRes[3]
+        unit: matchRes[2] === undefined ? '' : matchRes[2],
+        prolong: matchRes[3] === undefined ? '' : matchRes[3]
     }
 }
 
@@ -184,9 +195,9 @@ function durObjToVal(durObj) {
     if (durUnique(durObj.val))
         return durObj.val;
     let retVal = '';
-    if (durObj.val != null) retVal += durObj.val;
-    if (durObj.unit != null) retVal += ' ' + durObj.unit;
-    if (durObj.prolong != null) retVal += ' ' + durObj.prolong;
+    if (durObj.val != '') retVal += durObj.val;
+    if (durObj.unit != '') retVal += ' ' + durObj.unit;
+    if (durObj.prolong != '') retVal += ' ' + durObj.prolong;
     return retVal;
 }
 

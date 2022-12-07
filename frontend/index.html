@@ -15,21 +15,74 @@
 <body>
     <h1>Заклинания</h1>
     <h2>Таблица</h2>
+    <br>
     <div>
         <!-- functionals & table -->
+        <button id="open-dialog">Добавить</button>
         <br>
-        <label for="tier-select">Уровень:</label>
-        <select name="tiers" id="tier-select"></select>
+        <label for="tier-filter">Уровень (фильтр):</label>
+        <select name="tier-filter" id="tier-filter"></select>
         <br>
-        <br>
-        <table class="tabclass" id="spelltab"></table>
+        <table class="tabclass" id="spell-tab"></table>
     </div>
-    <br>
-    <br>
     <h2>Список</h2>
     <!-- spell list (filtered & sorted?) -->
-    <div id="spelllist">
+    <div id="spell-list">
     </div>
+    <!-- spell addition dialog -->
+    <dialog id="new-spell-dialog">
+        <form method="dialog" id="new-spell-form">
+            <div class="field">
+                <label for="new-tier">Уровень:</label>
+                <br>
+                <select name="new-tier" id="new-tier"></select>
+            </div>
+            <div class="field">
+                <label for="new-name">Имя:</label>
+                <br>
+                <input type="text" id="new-name" name="new-name" placeholder="Имя заклинания">
+                <br>
+                <small>Должно быть уникальным</small>
+                <div id="new-name-mark"></div>
+            </div>
+            <div class="field">
+                <label for="new-pp">Пункты силы:</label>
+                <br>
+                <input type="text" id="new-pp" name="new-pp" placeholder="Количество пунктов силы">
+                <br>
+                <small>Число или "специальное", может быть пустым</small>
+                <div id="new-pp-mark"></div>
+            </div>
+            <div class="field">
+                <label for="new-dist">Дистанция:</label>
+                <br>
+                <input type="text" id="new-dist" name="new-dist" placeholder="Дистанция заклинания">
+                <br>
+                <small>Примеры: "смекалка * 1 м", "5", "хар х 3", "80 км", "касание", "на себя", "особая"</small>
+                <div id="new-dist-mark"></div>
+            </div>
+            <div class="field">
+                <label for="new-dur">Длительность:</label>
+                <br>
+                <input type="text" id="new-dur" name="new-dur" placeholder="Длительность заклинания">
+                <br>
+                <small>Примеры: "3 (1/раунд)", "6", "мгновенно", "концентрация", "особая"</small>
+                <div id="new-dur-mark"></div>
+            </div>
+            <div class="field">
+                <label for="new-trap">Проявления:</label>
+                <br>
+                <textarea id="new-trap" name="new-trap" rows="2" cols="40" placeholder="Список проявлений"></textarea>
+            </div>
+            <div class="field">
+                <label for="new-desc">Описание:</label>
+                <br>
+                <textarea id="new-desc" name="new-desc" rows="6" cols="40" placeholder="Описание заклинания"></textarea>
+            </div>
+            <button id="new-send" type="submit" disabled="true">Сохранить</button>
+            <button id="new-cancel" type="reset">Отмена</button>
+        </form>
+    </dialog>
     <script src="include.js"></script>
     <script src="script.js"></script>
 </body>
