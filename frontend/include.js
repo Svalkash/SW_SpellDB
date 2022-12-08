@@ -1,7 +1,8 @@
 // consts
 const csvSeparator = ';'; //symbol to separate stuff in CSV with spells
-const STAT_NAMES = ['сила', 'ловкость', 'смекалка', 'характер'];
-const STAT_NAMES_SHORT = ['сил', 'лов', 'сме', 'хар'];
+const STAT_NAMES = ['сила', 'ловкость', 'смекалка', 'характер', 'выносливость'];
+const STAT_NAMES_SHORT = ['сил', 'лов', 'сме', 'хар', 'вын'];
+const STAT_IDS = ["stat-str", "stat-agi", "stat-sma", "stat-spi", "stat-vig"];
 const SPECIAL_WORDS = ['special', 'специальное', 'особое', 'особая'];
 
 //===================================================
@@ -53,7 +54,6 @@ function ppValid(pp) {
 //===================================================
 function buildDistRegex() {
     let r = '^((';
-    // all stats
     for (let stat of STAT_NAMES.concat(STAT_NAMES_SHORT))
         r += stat + '|';
     r = r.slice(0, -1) + ') *([*xXхХ])? *)?';
@@ -123,8 +123,16 @@ function distObjToNum(distObj) {
                 : 1.5; // клетка = 1.5м
     let preStat = minVal * unitCoef; // without the stat
     if (distObj.stat === '') return preStat; // no stat, no problem
-    else if (stats.hasOwnProperty(distObj.stat)) return stats[distObj.stat] / 2 * preStat;
+    else if (getStatValue(distObj.stat) !== null) return getStatValue(distObj.stat) / 2 * preStat;
     else return -1000000 + preStat; // at the bottom, but still somehow sorted
+}
+
+function getStatValue(statName) {
+    for (let i = 0; i < STAT_IDS.length; ++i)
+        if (statName == STAT_NAMES[i] || statName == STAT_NAMES_SHORT[i])
+            return document.getElementById(STAT_IDS[i]).value == '' ? null
+                : document.getElementById(STAT_IDS[i]).value;
+    return undefined;
 }
 
 // displayed value. With stat if possible.
@@ -133,8 +141,8 @@ function distObjToVal(distObj, calcStat = true) {
     if (distUnique(distObj.val))
         return distObj.val;
     let retVal = '';
-    if (distObj.stat != '' && stats.hasOwnProperty(distObj.stat) && !isNaN(distObj.val) && calcStat) {
-        retVal += (stats[distObj.stat] / 2 * distObj.val);
+    if (distObj.stat != '' && getStatValue(distObj.stat) !== null && !isNaN(distObj.val) && calcStat) {
+        retVal += (getStatValue(distObj.stat) / 2 * distObj.val);
     } else {
         if (distObj.stat != '') retVal += distObj.stat;
         if (distObj.stat != '' && distObj.val != '' && distObj.val != 1) retVal += ' * ';

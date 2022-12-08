@@ -4,13 +4,10 @@
 // globals
 var spellData; // spell data array
 var filteredTier; // filtered tier... ID?
-var sortedCol; // sort by this column
+var sortedCol = 0; // sort by this column
 var sortedAsc = true; // boolean
 const colNames = ['Уровень', 'Имя', 'Пункты силы', 'Дистанция', 'Длительность']; //column names
 const colProps = ['tier', 'name', 'pp', 'dist', 'dur']; //names for addressing
-
-// forms
-var stats = {}; // entered stats
 
 //===================================================
 // functions
@@ -23,7 +20,7 @@ function loadServerData() {
                 if (request.status === 200) {
                     respArr = JSON.parse(request.responseText);
                     spellData = respArr.map(spellObjFromResponse);
-                    drawTable(spellData);
+                    drawTable();
                 }
                 else alert("Request error: " + request.status);
             }
@@ -103,14 +100,17 @@ function addCellToRow(row, contents) {
 function addSortButton(row, col) {
     let but = document.createElement('button');
     but.textContent = sortedCol == col ? (sortedAsc ? '↑' : '↓') : '⇅';
-    but.onclick = () => { sortData(col); }
+    but.onclick = () => {
+        drawTable(col);
+    }
     row.cells[row.cells.length - 1].appendChild(but);
 }
 
-function drawTable() {
+function drawTable(sortByColNum=null) {
     console.log('redrawing...');
-    // console.log(spellData);
-    // console.log(filteredTier);
+    // first, re-sort with everything included
+    sortData(sortByColNum);
+    // now, draw the table
     let tab = document.getElementById("spell-tab");
     let list = document.getElementById("spell-list");
     tab.innerHTML = "";
@@ -182,15 +182,17 @@ function smarterCompare(a, b, reverse) {
     else return defaultCompare(b, a); //kinda reverse
 }
 
-function sortData(colNum) {
-    let toNumFunction = [tierToNum, (x) => x, ppToNum, distObjToNum, durObjToNum][colNum];
-    sortedAsc = sortedCol != colNum || !sortedAsc;
-    sortedCol = colNum; // for descendant
-    let propName = colProps[colNum];
+function sortData(colNum=null) {
+    // if colNum == null, re-sort for stat or something else, no buttons pressed
+    if (colNum !== null) {
+        sortedAsc = sortedCol != colNum || !sortedAsc;
+        sortedCol = colNum; // for descendant
+    }
+    let propName = colProps[sortedCol];
+    let toNumFunction = [tierToNum, (x) => x, ppToNum, distObjToNum, durObjToNum][sortedCol];
     spellData.sort((row1, row2) => {
         return smarterCompare(toNumFunction(row1[propName]), toNumFunction(row2[propName]), !sortedAsc);
     });
-    drawTable();
 }
 
 function filterData(tier) {
@@ -304,6 +306,12 @@ function prepareDialogForm() {
     }
 }
 
+function prepareStatForm() {
+    document.getElementById("stat-form").oninput = () => {
+        drawTable();
+    }
+}
+
 //======================================================================================================
 //======================================================================================================
 //======================================================================================================
@@ -313,5 +321,6 @@ function prepareDialogForm() {
 filteredTier = '';
 prepareTierFilter();
 prepareDialogForm();
+prepareStatForm();
 // load data
 loadServerData();
