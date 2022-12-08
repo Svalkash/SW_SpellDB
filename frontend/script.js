@@ -4,8 +4,8 @@
 // globals
 var spellData; // spell data array
 var filteredTier; // filtered tier... ID?
-var sortedCol = 0; // sort by this column
-var sortedAsc = true; // boolean
+var sortedCol; // sort by this column
+var sortReverse = false; // boolean
 const colNames = ['Уровень', 'Имя', 'Пункты силы', 'Дистанция', 'Длительность']; //column names
 const colProps = ['tier', 'name', 'pp', 'dist', 'dur']; //names for addressing
 
@@ -99,7 +99,7 @@ function addCellToRow(row, contents) {
 
 function addSortButton(row, col) {
     let but = document.createElement('button');
-    but.textContent = sortedCol == col ? (sortedAsc ? '↑' : '↓') : '⇅';
+    but.textContent = sortedCol == col ? (sortReverse ? '↑' : '↓') : '⇅';
     but.onclick = () => {
         drawTable(col);
     }
@@ -107,7 +107,6 @@ function addSortButton(row, col) {
 }
 
 function drawTable(sortByColNum=null) {
-    console.log('redrawing...');
     // first, re-sort with everything included
     sortData(sortByColNum);
     // now, draw the table
@@ -173,25 +172,30 @@ function drawTable(sortByColNum=null) {
     }
 }
 
-function defaultCompare(a, b) {
-    return a > b ? 1 : a < b ? -1 : 0;
+function defaultCompare(a, b, reverse = false) {
+    let defComp = a > b ? 1 : a < b ? -1 : 0;
+    return reverse ? -defComp : defComp;
 }
 
-function smarterCompare(a, b, reverse) {
-    if (reverse) return defaultCompare(a, b);
-    else return defaultCompare(b, a); //kinda reverse
+function compareRowsOnCol(row1, row2, colNum, reverse=false) {
+    let propName = colProps[colNum];
+    let toNumFunction = [tierToNum, x => x, ppToNum, distObjToNum, durObjToNum][colNum];
+    return defaultCompare(toNumFunction(row1[propName]), toNumFunction(row2[propName]), reverse); //kinda reverse
 }
 
 function sortData(colNum=null) {
     // if colNum == null, re-sort for stat or something else, no buttons pressed
-    if (colNum !== null) {
-        sortedAsc = sortedCol != colNum || !sortedAsc;
+    if (colNum !== undefined) {
+        sortReverse = sortedCol == colNum && !sortReverse; // always reset to false when changing cols
         sortedCol = colNum; // for descendant
     }
-    let propName = colProps[sortedCol];
-    let toNumFunction = [tierToNum, (x) => x, ppToNum, distObjToNum, durObjToNum][sortedCol];
     spellData.sort((row1, row2) => {
-        return smarterCompare(toNumFunction(row1[propName]), toNumFunction(row2[propName]), !sortedAsc);
+        let res = 0;
+        if (sortedCol !== null) res = compareRowsOnCol(row1, row2, sortedCol, sortReverse);
+        // if equal, try sorting on each col to maintain some order
+        if (res == 0) res = compareRowsOnCol(row1, row2, 0, sortReverse); // tier
+        if (res == 0) res = compareRowsOnCol(row1, row2, 1, sortReverse); // name - unique
+        return res;
     });
 }
 
